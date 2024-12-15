@@ -13,8 +13,8 @@ dotenv.config();
 
 const server = new Server(
   {
-    name: "chatgpt-claude-conversation",
-    version: "0.1.2",
+    name: "chatgpt-claude-chat",
+    version: "0.1.4",
   },
   {
     capabilities: {
@@ -40,12 +40,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               type: "number",
               description: "会話のターン数",
             },
-            apiKey: {
-              type: "string",
-              description: "OpenAI APIキー",
-            },
           },
-          required: ["topic", "turns", "apiKey"],
+          required: ["topic", "turns"],
         },
       },
     ],
@@ -57,10 +53,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     case "start_conversation": {
       const topic = String(request.params.arguments?.topic);
       const turns = Number(request.params.arguments?.turns);
-      const apiKey = String(request.params.arguments?.apiKey);
+      const apiKey = process.env.OPENAI_API_KEY;
 
-      if (!topic || isNaN(turns) || !apiKey) {
-        throw new Error("トピック、ターン数、APIキーが必要です");
+      if (!topic || isNaN(turns)) {
+        throw new Error("トピックとターン数が必要です");
+      }
+
+      if (!apiKey) {
+        throw new Error("OpenAI APIキーが設定されていません");
       }
 
       const openai = new OpenAI({ apiKey });
