@@ -1,16 +1,16 @@
 {
   "name": "chatgpt-claude-conversation",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "ChatGPTとClaudeの会話を実現するMCPサーバー",
   "type": "module",
   "bin": {
-    "chatgpt-claude-conversation": "./build/index.js"
+    "chatgpt-claude-conversation": "build/index.js"
   },
   "files": [
     "build"
   ],
   "scripts": {
-    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
+    "build": "tsc && chmod +x build/index.js",
     "prepare": "npm run build",
     "watch": "tsc --watch",
     "inspector": "npx @modelcontextprotocol/inspector build/index.js"
@@ -26,7 +26,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/kamenonagare/chatgpt-claude-conversation.git"
+    "url": "git+https://github.com/kamenonagare/chatgpt-claude-conversation.git"
   },
   "keywords": [
     "chatgpt",
