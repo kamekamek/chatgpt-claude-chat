@@ -11,14 +11,10 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 const server = new Server(
   {
     name: "chatgpt-claude-conversation",
-    version: "0.1.0",
+    version: "0.1.2",
   },
   {
     capabilities: {
@@ -44,8 +40,12 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               type: "number",
               description: "会話のターン数",
             },
+            apiKey: {
+              type: "string",
+              description: "OpenAI APIキー",
+            },
           },
-          required: ["topic", "turns"],
+          required: ["topic", "turns", "apiKey"],
         },
       },
     ],
@@ -57,17 +57,20 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     case "start_conversation": {
       const topic = String(request.params.arguments?.topic);
       const turns = Number(request.params.arguments?.turns);
+      const apiKey = String(request.params.arguments?.apiKey);
 
-      if (!topic || isNaN(turns)) {
-        throw new Error("トピックとターン数が必要です");
+      if (!topic || isNaN(turns) || !apiKey) {
+        throw new Error("トピック、ターン数、APIキーが必要です");
       }
+
+      const openai = new OpenAI({ apiKey });
 
       let conversation = `トピック: ${topic}\n\n`;
 
       for (let i = 0; i < turns; i++) {
         // ChatGPTの応答
         const chatgptResponse = await openai.chat.completions.create({
-          model: "gpt-3.5-turbo",
+          model: "gpt-4o-mini-2024-07-18",
           messages: [
             { role: "system", content: "あなたはChatGPTです。Claudeとの会話を行います。" },
             { role: "user", content: `${topic}について、Claudeと会話してください。これは${i + 1}ターン目です。` },
@@ -79,7 +82,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
         // Claudeの応答（実際のClaudeAPIがないため、OpenAI APIで代用）
         const claudeResponse = await openai.chat.completions.create({
-          model: "gpt-3.5-turbo",
+          model: "gpt-4o-mini-2024-07-18",
           messages: [
             { role: "system", content: "あなたはClaudeです。ChatGPTとの会話を行います。" },
             { role: "user", content: `${topic}について、ChatGPTと会話してください。これは${i + 1}ターン目です。ChatGPTの最後の発言: ${chatgptMessage}` },
