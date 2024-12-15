@@ -14,7 +14,7 @@ dotenv.config();
 const server = new Server(
   {
     name: "chatgpt-claude-chat",
-    version: "0.1.4",
+    version: "0.1.6",
   },
   {
     capabilities: {
@@ -65,10 +65,22 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       const openai = new OpenAI({ apiKey });
 
-      let conversation = `トピック: ${topic}\n\n`;
+      const sendMessage = (message: string) => {
+        return {
+          content: [{
+            type: "text",
+            text: message,
+          }],
+        };
+      };
+
+      sendMessage(`トピック: ${topic}\n会話を開始します。\n`);
 
       for (let i = 0; i < turns; i++) {
+        sendMessage(`\nターン ${i + 1}:`);
+
         // ChatGPTの応答
+        sendMessage("ChatGPTが考えています...");
         const chatgptResponse = await openai.chat.completions.create({
           model: "gpt-4o-mini-2024-07-18",
           messages: [
@@ -78,9 +90,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         });
 
         const chatgptMessage = chatgptResponse.choices[0].message?.content || "ChatGPTの応答を取得できませんでした。";
-        conversation += `ChatGPT: ${chatgptMessage}\n\n`;
+        sendMessage(`ChatGPT: ${chatgptMessage}\n`);
 
         // Claudeの応答（実際のClaudeAPIがないため、OpenAI APIで代用）
+        sendMessage("Claudeが考えています...");
         const claudeResponse = await openai.chat.completions.create({
           model: "gpt-4o-mini-2024-07-18",
           messages: [
@@ -90,15 +103,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         });
 
         const claudeMessage = claudeResponse.choices[0].message?.content || "Claudeの応答を取得できませんでした。";
-        conversation += `Claude: ${claudeMessage}\n\n`;
+        sendMessage(`Claude: ${claudeMessage}\n`);
       }
 
-      return {
-        content: [{
-          type: "text",
-          text: conversation,
-        }],
-      };
+      return sendMessage("会話が終了しました。");
     }
 
     default:
